@@ -105,30 +105,34 @@ void setup() {
   pinMode(CS_PIN, OUTPUT);// del lector
   pinMode(LORA_NSS, OUTPUT);// de la antena 
 
-/*
-lector SD
-  SPI1.setRX(12);
-  SPI1.setTX(11);
-  SPI1.setSCK(10);
+// se les manda una señal para que ambos empiezen desconectados de MOSI,MISO y CLK, para que los dispositivos no esten conectados al mismo tiempo y no alla confictos
+  digitalWrite(CS_PIN, HIGH);    
+  digitalWrite(LORA_NSS, HIGH);  
 
-   while (!SD.begin(CS_PIN, SPI1)) {  
-    Serial.println("Error al iniciar la SD, reintentando...");
+//iniciar lector SD
+   if (!SD.begin(CS_PIN, SPI1)) {  // si no inicia correctamente 
+    Serial.println("Error al iniciar la SD");
     delay(500);
   }
- 
+  else{ // caso contrario si el lector SD inicia correctamente
+    Serial.println("SD iniciada correctamente");
+  }
 
-  Serial.println("SD iniciada correctamente");
-   */
- /*
+//iniciar lora
   LoRa.setSPI(SPI1);
   LoRa.setPins(LORA_NSS, LORA_RST, LORA_DIO0);
 
   if (!LoRa.begin(433E6)) {
     Serial.println("Error al iniciar LoRa, revisa conexiones!");
-    while (1);
   }
+  else{ //caso contrario si inicia bien la antena 
+  
+    // pequeñas configuraciones para la antena 
+  LoRa.setSyncWord(0xA5);// le ponemos una clave a cada paquete que mandemos
+  LoRa.enableCrc();// para calcular cuantos datos mandamos para saber si llegan corrompidos o no 
   Serial.println("LoRa iniciado correctamente");
-*/
+  }
+
 }
 
 void loop() {
@@ -171,26 +175,12 @@ void loop() {
   }
 
 //================ Antena Lora =====================
-  LoRa.setSPI(SPI1);// le decimos que vamso a usar el controlador SPI1
-  LoRa.setPins(LORA_NSS, LORA_RST, LORA_DIO0);
-
-  //digitalWrite(LORA_NSS, LOW); --- me di cuenta de que no es neceseario conectar manualmente a MOSI, MISO y CLK LoRa.begin hace esto internamente, pero no los desconecta de MOSI, MISO y CLK
-  digitalWrite(CS_PIN, HIGH); // se le envia una señal 
-
-  if (!LoRa.begin(433E6)) {////inicializa la comunicacion SPI con la antena a 433,000,000 Hz (433E6 es notación científica: 433 × 10⁶), si da falso manda un mensaje y entra en un bucle vacio
-    Serial.println("Error al iniciar LoRa, revisa conexiones!");
-    while (1);
-  }
-  // pequeñas configuraciones para la antena 
-  LoRa.setSyncWord(0xA5);// le ponemos una clave a cada paquete que mandemos
-  LoRa.enableCrc();// para calcular cuantos datos mandamos para saber si llegan corrompidos o no 
-  Serial.println("LoRa iniciado correctamente");
 
   while (Serial1.available() > 0) {// mientras serial1 tenga datos por leer 
   gps.encode(Serial1.read());// lee byte por bye y se lo esntrga a la funcion encode
   }
 
-LoRa.beginPacket();// crea un paqute de datos
+LoRa.beginPacket();// crea un paquete de datos
 // con la funcion LoRa.print agregamos lo que queramos en el paqute de datos 
 
 //mandamos en forma de CSV
@@ -206,10 +196,10 @@ LoRa.endPacket();// termina de crear el paquete de datos y los envia
   
   Serial.println("----------------------------------------------------------------------------------");
 
-  // ===== Tabla resumen con TODAS las variables globales ya listas =====
+  // ===== Serial =====
   Serial.println("---MPU-6050---                     ---BMP280---                 ---Magnetometro---");
   Serial.println("Acelerometro en g: X:              Temperatura: " + String(bmpTemp)+ "          X: " + String(magX) + " Y: " + String(magY) + "Z:" + String(magZ));
-  Serial.println(String(aceleracionX) + "  Y:" + String(aceleracionY) + "  Z:" + String(aceleracionZ) +"              Presion: " + String(presion) + " hPa");
+  Serial.println(String(aceleracionX) + "  Y:" + String(aceleracionY) + "  Z:" + String(aceleracionZ) +"             Presion: " + String(presion) + " hPa");
   Serial.println("Giroscopio en grados/s: X:         Altitud: " + String(altitud) + " m");
   Serial.println(String(giroX) + " Y:" + String(giroY) + " Z:" + String(giroZ));
   Serial.println("Temp del MPU: " + String(TemperaturaMPU) + " °C");
@@ -236,24 +226,20 @@ LoRa.endPacket();// termina de crear el paquete de datos y los envia
   }
   Serial.println("----------------------------------------------------------------------------------\n");
 
-//=================== lector SD ============================================0
+//=================== lector SD =============================================
 
-  digitalWrite(LORA_NSS, HIGH); // se desconecta a lora de MISO, MOSI y SCLK
-  //digitalWrite(CS_PIN, LOW);
-
-   while (!SD.begin(CS_PIN, SPI1)) {  // se le da el pin CS para inicializar y que controlador SPI vamos a usar en este caso el SPI1
-    Serial.println("Error al iniciar la SD, reintentando...");
-    delay(500);
-  }
-
-  Serial.println("SD iniciada correctamente");
+if (SD.exists("DatosSatelite.txt")) {
+  SD.remove("DatosSatelite.txt"); // se quito |O_TRUNC y se puso la funcion SD.remove
+}
 
   File archivo;
-  while (!(archivo = SD.open("DatosSatelite.txt", O_WRITE | O_CREAT |O_TRUNC))) { // si el archivo no se abrio correctamente lo vuleve a intentar asta que se abra y si no existe lo crea con O_CREAT, le da permisos para escribir en el archivo con O_WRITE y borra todo el contenido del archivo con O_TRUNC
+  if (!(archivo = SD.open("DatosSatelite.txt", O_WRITE | O_CREAT))) { // si el archivo no se abrio correctamente, si no existe lo crea con O_CREAT, le da permisos para escribir en el archivo con O_WRITE
 
-  Serial.println("Reintentando crear archivo...");
+  Serial.println("El archivo no abrio");
   delay(500);
 }
+else{ // caso contrario si el archivo abrio correctamente
+
 // con la funcion archivo.println escribimos en el archivo
   archivo.println("---MPU-6050---                     ---BMP280---                 ---Magnetometro---");
   archivo.println("Acelerometro en g: X:              Temperatura: " + String(bmpTemp)+ "          X: " + String(magX) + " Y: " + String(magY) + "Z:" + String(magZ));
@@ -285,6 +271,7 @@ archivo.println("---------------------------------------------------------------
 
   archivo.close(); // importante cerrar el archivo simepre que tenerminemos de escirbir en el archivo
   delay(200); // delay antes de leer
+}
 
     // Leer archivo
   archivo = SD.open("DatosSatelite.txt");// abrimos el archivo 
