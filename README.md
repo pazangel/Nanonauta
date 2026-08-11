@@ -475,10 +475,43 @@ Según los comentarios del código fuente:
 
 ## 👥 Equipo
 
-- [pazangel](https://github.com/pazangel)
-- [ErickRodriguezR](https://github.com/ErickRodriguezR)
-- [gustavocalderon067](https://github.com/gustavocalderon067)
-- [robertytocerva](https://github.com/robertytocerva)
+<table> <!-- abre la tabla que va a contener a todo el equipo -->
+<tr> <!-- abre una fila, todo lo que este dentro de esta fila se vera horizontal -->
+
+<td align="center"> <!-- abre una celda dentro de la fila, centrada, sera la celda de pazangel -->
+<a href="https://github.com/pazangel"> <!-- abre el link que lleva al perfil de pazangel -->
+<img src="https://github.com/pazangel.png" width="100"><br> <!-- muestra la foto de perfil de pazangel a 100px, y el br salta de linea para que el nombre quede debajo -->
+<b>pazangel</b> <!-- muestra el nombre en negritas debajo de la foto -->
+</a> <!-- cierra el link de pazangel -->
+</td> <!-- cierra la celda de pazangel -->
+
+<td align="center"> <!-- abre la celda de ErickRodriguezR -->
+<a href="https://github.com/ErickRodriguezR"> <!-- abre el link que lleva al perfil de ErickRodriguezR -->
+<img src="https://github.com/ErickRodriguezR.png" width="100"><br> <!-- foto de perfil de ErickRodriguezR y salto de linea -->
+<b>ErickRodriguezR</b> <!-- nombre en negritas debajo de la foto -->
+</a> <!-- cierra el link de ErickRodriguezR -->
+</td> <!-- cierra la celda de ErickRodriguezR -->
+
+<td align="center"> <!-- abre la celda de gustavocalderon067 -->
+<a href="https://github.com/gustavocalderon067"> <!-- abre el link que lleva al perfil de gustavocalderon067 -->
+<img src="https://github.com/gustavocalderon067.png" width="100"><br> <!-- foto de perfil de gustavocalderon067 y salto de linea -->
+<b>gustavocalderon067</b> <!-- nombre en negritas debajo de la foto -->
+</a> <!-- cierra el link de gustavocalderon067 -->
+</td> <!-- cierra la celda de gustavocalderon067 -->
+
+<td align="center"> <!-- abre la celda de robertytocerva -->
+<a href="https://github.com/robertytocerva"> <!-- abre el link que lleva al perfil de robertytocerva -->
+<img src="https://github.com/robertytocerva.png" width="100"><br> <!-- foto de perfil de robertytocerva y salto de linea -->
+<b>robertytocerva</b> <!-- nombre en negritas debajo de la foto -->
+</a> <!-- cierra el link de robertytocerva -->
+</td> <!-- cierra la celda de robertytocerva -->
+
+</tr> <!-- cierra la fila -->
+</table> <!-- cierra la tabla completa -->
+
+<!-- https://github.com/NOMBREDEUSUARIO.png
+GitHub te permite acceder directamente a la foto de perfil de cualquier usuario con esa URL — sin tener que subir ninguna imagen tú mismo.
+-->
 
 ---
 
