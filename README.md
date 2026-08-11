@@ -386,11 +386,14 @@ Instalar desde el Gestor de Librerías de Arduino IDE (`Sketch → Incluir libre
    ```
    Herramientas → Placa → Raspberry Pi RP2040 → Waveshare RP2040-Zero
    ```
-3. **Opción A — Upload directo:** Hacer clic en **Subir** (→).
-4. **Opción B — Archivo UF2:**
+3. **Opción A — Archivo UF2:**
    - `Sketch → Exportar binario compilado`
    - Presionar **BOOT** en la placa y conectar USB (aparece como unidad de almacenamiento)
    - Copiar el archivo `.uf2` generado a la unidad
+4. **Opción B — Upload directo:** Hacer clic en **Subir** (→).
+   - aparecera como unidad USB
+   - Copiar el archivo `.uf2` generado a la unidad
+   
 
 > ⚠️ Puede aparecer un error al abrir el Monitor Serie tras la primera carga. Ignorarlo y reabrirlo manualmente.
 
