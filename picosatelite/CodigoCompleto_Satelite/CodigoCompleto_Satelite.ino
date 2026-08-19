@@ -29,6 +29,7 @@ float TemperaturaMPU; // temperatura del MPU
 
 // variables de BMP280
 float bmpTemp, presion, altitud;
+float presionReferencia;
 
 //variables de QMC5883P(Magnetometro)
 int16_t magX = 0, magY = 0, magZ = 0;
@@ -72,7 +73,7 @@ void setup() {
 // Sacar el MPU del modo suspensión, es decir lo activa 
   escribirRegistro(0x6B, 0x00);
 
-// se desactiva el modo maestro para que los datos pasen por XDA y XCL, esto permite que el MPU deje de controlar esos pines
+// se desactiva el modo maestro para que los datos pasen por XDA y XCL, esto permite que el MPU deje de controlar esos pines para que ahora lleguen datos por ahi
   escribirRegistro(0x6A, 0x00);
 
 // Activar BYPASS_EN, significa que hay que conectar el SCL y SDA del arduino con XDA y XCL del MPU para que alla paso de datos
@@ -80,17 +81,23 @@ void setup() {
 
   Serial.println("Iniciando BMP280...");
 
-   if (!bmp.begin()) { 
+   if (!bmp.begin()) { // si no inicia correctamente 
     Serial.println("No se encontró el BMP280");
   }
-  else{
+  else{// si incia correctamente toma una muestra de referencia de la presion 
   Serial.println("BMP280 iniciado");
+
+  //tomar una muestra de la presion una sola vez
+  presionReferencia = bmp.readPressure() / 100.0F;
   }
 
-    if (!qmc.begin()) {
+    if (!qmc.begin()) {// si no inicia correctamente
     Serial.println("No se encontró el QMC5883P");
   }
-  Serial.println("QMC5883P iniciado");
+  else{ // si inicia correctamente 
+    Serial.println("QMC5883P iniciado");
+  }
+  
 
 // Configuración deseada del magnetometro
   qmc.setMode(QMC5883P_MODE_NORMAL); // se usa QMC5883P_MODE_NORMAL para activar el sensor, si se pone QMC5883P_MODE_STANDBY se apaga el sensor
@@ -120,7 +127,21 @@ void setup() {
 
 //iniciar lora
   LoRa.setSPI(SPI1);
-  LoRa.setPins(LORA_NSS, LORA_RST, LORA_DIO0);
+  LoRa.setPins(LORA_NSS, LORA_RST, LORA_DIO0);// le pasamos los pines para reiniciar la antena 
+  /*
+
+  el pin DIO0
+  En modo TRANSMISIÓN el DIO0 se activa cuando TERMINÓ de transmitir el paquete
+  En modo RECEPCIÓN el DIO0 se activa cuando LLEGÓ un paquete nuevo, por ejemplo:
+
+  en el emisor:
+  Cuando llamamos LoRa.endPacket(), la funcion internamente puede usar el DIO0 para saber cuándo terminó realmente de transmitir el paquete por aire,
+  en vez de solo asumir un tiempo fijo.
+
+  en el receptor:
+  Cuando llamamos LoRa.parsePacket(), la funcion puede usar el DIO0 para saber inmediatamente cuándo llegó un paquete nuevo,
+  en vez de estar constantemente revisando registros internos del chip.
+  */
 
   if (!LoRa.begin(433E6)) {
     Serial.println("Error al iniciar LoRa, revisa conexiones!");
@@ -164,13 +185,13 @@ void loop() {
 //================ BMP280 =========================
 
   bmpTemp = bmp.readTemperature();
-  presion = bmp.readPressure() / 100.0F;
-  altitud = bmp.readAltitude(1013.25);
+  presion = bmp.readPressure() / 100.0F;// dividimos entre 100.0f para convertir de Pascales a hectopascales
+  altitud = bmp.readAltitude(presionReferencia);// se le pasa un valor de referencia de presion, para calcular la altitud, no le pasamos constantemente la presion porque no pudieramos ver la distancia que a subido el satelite
 
 //=============== Magnetometro =====================
   if (qmc.isDataReady()) {// si los datos estan listos para leer
-    if (qmc.getRawMagnetic(&magX, &magY, &magZ)) {// guarda los datos en las variables de 16 bits, la funcion ocupa las direcciones de memoria de las variables, luego el if pregunta se leyeron correctamenete los datos?
-// no ocupamos hacer nada ya lo hace la funcion qmc.getRawMagnetic
+    if (!qmc.getRawMagnetic(&magX, &magY, &magZ)) {// guarda los datos en las variables de 16 bits, la funcion ocupa las direcciones de memoria de las variables, luego el if pregunta, no se leyeron correctamenete los datos? la misma funcion qmc.getRawMagnetic regresa true o false si no se leyeron correctamente
+    Serial.println("Advertencia: fallo en lectura del magnetometro");
     }
   }
 
@@ -198,8 +219,8 @@ LoRa.endPacket();// termina de crear el paquete de datos y los envia
 
   // ===== Serial =====
   Serial.println("---MPU-6050---                     ---BMP280---                 ---Magnetometro---");
-  Serial.println("Acelerometro en g: X:              Temperatura: " + String(bmpTemp)+ "          X: " + String(magX) + " Y: " + String(magY) + "Z:" + String(magZ));
-  Serial.println(String(aceleracionX) + "  Y:" + String(aceleracionY) + "  Z:" + String(aceleracionZ) +"             Presion: " + String(presion) + " hPa");
+  Serial.println("Acelerometro en g: X:              Temperatura: " + String(bmpTemp)+ "           X: " + String(magX) + " Y: " + String(magY) + " Z:" + String(magZ));
+  Serial.println(String(aceleracionX) + "  Y:" + String(aceleracionY) + "  Z:" + String(aceleracionZ) +"            Presion: " + String(presion) + " hPa");
   Serial.println("Giroscopio en grados/s: X:         Altitud: " + String(altitud) + " m");
   Serial.println(String(giroX) + " Y:" + String(giroY) + " Z:" + String(giroZ));
   Serial.println("Temp del MPU: " + String(TemperaturaMPU) + " °C");
@@ -242,8 +263,8 @@ else{ // caso contrario si el archivo abrio correctamente
 
 // con la funcion archivo.println escribimos en el archivo
   archivo.println("---MPU-6050---                     ---BMP280---                 ---Magnetometro---");
-  archivo.println("Acelerometro en g: X:              Temperatura: " + String(bmpTemp)+ "          X: " + String(magX) + " Y: " + String(magY) + "Z:" + String(magZ));
-  archivo.println(String(aceleracionX) + "  Y:" + String(aceleracionY) + "  Z:" + String(aceleracionZ) +"             Presion: " + String(presion) + " hPa");
+  archivo.println("Acelerometro en g: X:              Temperatura: " + String(bmpTemp)+ "           X: " + String(magX) + " Y: " + String(magY) + " Z:" + String(magZ));
+  archivo.println(String(aceleracionX) + "  Y:" + String(aceleracionY) + "  Z:" + String(aceleracionZ) +"            Presion: " + String(presion) + " hPa");
   archivo.println("Giroscopio en grados/s: X:         Altitud: " + String(altitud) + " m");
   archivo.println(String(giroX) + " Y:" + String(giroY) + " Z:" + String(giroZ));
   archivo.println("Temp del MPU: " + String(TemperaturaMPU) + " °C");
