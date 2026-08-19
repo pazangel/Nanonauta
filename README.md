@@ -390,9 +390,9 @@ Instalar desde el Gestor de Librerías de Arduino IDE (`Sketch → Incluir libre
    - `Sketch → Exportar binario compilado`
    - Presionar **BOOT** en la placa y conectar USB (aparece como unidad de almacenamiento)
    - Copiar el archivo `.uf2` generado a la unidad
-4. **Opción B — Upload directo:** Hacer clic en **Subir** (→).
+4. **Opción B — Upload semi-directo:** Hacer clic en **Subir** (→).
    - aparecera como unidad USB
-   - Copiar el archivo `.uf2` generado a la unidad
+   - Copiar el archivo `.uf2` generado a la unidad que aparece como USB
    
 
 > ⚠️ Puede aparecer un error al abrir el Monitor Serie tras la primera carga. Ignorarlo y reabrirlo manualmente.
@@ -441,13 +441,6 @@ flowchart LR
 | **Verificación de datos** | `qmc.isDataReady()` antes de leer | Evitar lecturas inválidas del magnetómetro |
 | **Filtrado por prefijo** | `mensaje.startsWith("SAT7X:")` en receptor | Rechazo de paquetes de otros dispositivos |
 | **RSSI** | `LoRa.packetRssi()` en receptor | Monitoreo de calidad de enlace |
-
-### Limitaciones conocidas
-
-- No implementa watchdog timer (WDT).
-- El archivo SD se sobreescribe cada ciclo (`O_TRUNC`) — solo conserva la última lectura.
-- LoRa se reinicializa en cada iteración del `loop()` (no es persistente entre ciclos).
-- No hay modo de bajo consumo (sleep).
 
 ---
 
