@@ -7,10 +7,14 @@
 #include <SPI.h> 
 #include <SD.h>
 #include <LoRa.h>
+#include <Servo.h>
 
+Servo servoParacaidas; // obejeto para el servo
 Adafruit_BMP280 bmp;//objeto para el BMP280
 Adafruit_QMC5883P qmc; //objeto para el magnetometro
 TinyGPSPlus gps; //objeto para el gps
+
+#define PIN_SERVO 8 // pin digital pwm para el micro servo
 
 #define MPU_ADDR 0x68 // es la direccion del sesnor MPU-6050 con la que nos vamos a comunicar 
 
@@ -33,6 +37,10 @@ float presionReferencia;
 
 //variables de QMC5883P(Magnetometro)
 int16_t magX = 0, magY = 0, magZ = 0;
+
+//variables para abrir el paracaidas o el micro servo
+float alturaMaxima = 0;
+float margenTolerancia = 0.70; 
 
 //funciones para el mpu
 void escribirRegistro(byte registro, byte valor) {
@@ -60,6 +68,7 @@ void leerRegistros(byte registroInicial, byte *datos, byte cantidad) {
 void setup() {
   Serial.begin(9600);
   while(!Serial);
+
 
   Serial1.setRX(1);// le decimos al pin 1 como debe comportarse
   Serial1.setTX(0); //le decimos al pin 0 como debe comportarse
@@ -154,6 +163,8 @@ void setup() {
   Serial.println("LoRa iniciado correctamente");
   }
 
+  servoParacaidas.attach(PIN_SERVO);// funcion del servo
+  servoParacaidas.write(0); // empieza cerrado 
 }
 
 void loop() {
@@ -187,6 +198,32 @@ void loop() {
   bmpTemp = bmp.readTemperature();
   presion = bmp.readPressure() / 100.0F;// dividimos entre 100.0f para convertir de Pascales a hectopascales
   altitud = bmp.readAltitude(presionReferencia);// se le pasa un valor de referencia de presion, para calcular la altitud, no le pasamos constantemente la presion porque no pudieramos ver la distancia que a subido el satelite
+
+  // ============== para caidas o microservo SG90 =================
+
+  if (altitud > alturaMaxima) {// si la altitud que se lea en el momento es mayor a alturamaxima
+    alturaMaxima = altitud; // actualiza la altura maxima con el valor leido actual
+  }
+  
+  if ((alturaMaxima - altitud) > margenTolerancia) { 
+   /*
+   desplegar paracaidas
+
+   se resta la altitudMaxima menos la altitud que se lea en el momento
+   esto se hace para saber si esta callendo el satelite, por ejemplo:
+
+   500 - 480 = 20 metros 
+
+   ha bajado 20 metros desde su punto más alto
+
+   se pone un margen por que la altitud tiene ruido electrico y no tendria chiste si solo se pone 
+   altitud < alturaMaxima porque altiud puede cambiar con poco movimiento y puede hacer que el para caidas se abra con algun movimiento 
+
+   asi que si el resultado de la resta es mayor a 3.0 m podemos decir que si bajo realmente el satelite
+   */
+
+   servoParacaidas.write(180);
+  }
 
 //=============== Magnetometro =====================
   if (qmc.isDataReady()) {// si los datos estan listos para leer
@@ -306,8 +343,7 @@ archivo.println("---------------------------------------------------------------
   } else { // si el archivo no abre manda un mensaje de error
     Serial.println("Error al abrir archivo para leer");
   }
-
-  delay(1000);
+    delay(1000);
 }
 
 
